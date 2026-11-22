@@ -1,0 +1,27 @@
+title: Outbound TCP Connection to Port 50005 from User-Writable Path
+id: 2e9d8b41-6a7c-4f30-b5d2-8c4e1a9f7b66
+status: experimental
+description: Detects a process in a user-writable directory connecting out to TCP port 50005, the default port of the Win10-backdoor educational project.
+tags:
+    - attack.command-and-control
+    - attack.t1571
+    - attack.t1095
+logsource:
+    category: network_connection
+    product: windows
+detection:
+    selection:
+        Initiated: 'true'
+        Protocol: tcp
+        DestinationPort: 50005
+    selection_path:
+        Image|contains:
+            - '\Users\Public\'
+            - '\AppData\'
+            - '\Temp\'
+            - '\Downloads\'
+            - '\Desktop\'
+    condition: selection and selection_path
+falsepositives:
+    - Uncommon; port 50005 is occasionally used by dev tools or games
+level: medium

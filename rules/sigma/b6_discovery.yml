@@ -1,0 +1,30 @@
+title: Discovery Commands Run Under cmd from User-Writable Grandparent
+id: 8b2d5c74-9e1f-4a63-b7c0-4d3f6a1e9c85
+status: experimental
+description: Detects common reconnaissance commands executed via cmd.exe whose parent process runs from a user-writable path.
+tags:
+    - attack.discovery
+    - attack.t1033
+    - attack.t1082
+    - attack.t1016
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_img:
+        Image|endswith:
+            - '\whoami.exe'
+            - '\ipconfig.exe'
+            - '\systeminfo.exe'
+            - '\net.exe'
+            - '\net1.exe'
+            - '\tasklist.exe'
+            - '\netstat.exe'
+    selection_parent:
+        ParentCommandLine|contains|all:
+            - 'cmd'
+            - ' /c '
+    condition: selection_img and selection_parent
+falsepositives:
+    - Administrators running diagnostics; scripts and management agents
+level: low

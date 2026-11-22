@@ -1,0 +1,54 @@
+title: Command Shell Spawned by Process in User-Writable Path
+id: 5d7b2f90-3e8a-4a16-8c49-1f6a0b4e7d23
+name: cmd_from_userpath
+status: experimental
+description: Detects cmd.exe launched with /c by a parent running from a user-writable directory, consistent with C runtime popen/system calls in a simple reverse shell.
+tags:
+    - attack.execution
+    - attack.t1059.003
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_child:
+        Image|endswith: '\cmd.exe'
+        CommandLine|contains: ' /c '
+    selection_parent:
+        ParentImage|contains:
+            - '\Users\Public\'
+            - '\AppData\'
+            - '\Temp\'
+            - '\Downloads\'
+            - '\Desktop\'
+    filter_shells:
+        ParentImage|endswith:
+            - '\explorer.exe'
+            - '\powershell.exe'
+            - '\WindowsTerminal.exe'
+            - '\Code.exe'
+    condition: selection_child and selection_parent and not filter_shells
+falsepositives:
+    - Installers and portable developer tools that shell out to cmd
+level: medium
+---
+title: Burst of Command Shells from the Same Parent Process
+id: c3e81a6d-7f24-4b09-9d5a-2a1c6e8f4b70
+name: cmd_burst_same_parent
+status: experimental
+description: Multiple matches of the shell-spawn rule from the same parent within one minute suggest interactive remote command execution.
+author: Analyst
+date: 2026-11-22
+tags:
+    - attack.execution
+    - attack.t1059.003
+correlation:
+    type: event_count
+    rules:
+        - cmd_from_userpath
+    group-by:
+        - Computer
+        - ParentImage
+    timespan: 1m
+    condition:
+        gte: 4
+level: high

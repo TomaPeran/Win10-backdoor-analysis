@@ -1,0 +1,32 @@
+title: Unsigned Process in User-Writable Path Connecting to Internal Host on High Port
+id: 9a4c6e17-1d3b-4c85-a7f2-5b0e8d3c9a42
+status: experimental
+description: Hunting rule for implants beaconing to a LAN controller on an unusual high port, regardless of the specific port chosen.
+tags:
+    - attack.command-and-control
+    - attack.t1571
+logsource:
+    category: network_connection
+    product: windows
+detection:
+    selection:
+        Initiated: 'true'
+        Protocol: tcp
+        Signed: 'false'
+    selection_dest:
+        DestinationIp|cidr:
+            - '10.0.0.0/8'
+            - '172.16.0.0/12'
+            - '192.168.0.0/16'
+    selection_port:
+        DestinationPort|gte: 10000
+    selection_path:
+        Image|contains:
+            - '\Users\Public\'
+            - '\AppData\'
+            - '\Temp\'
+            - '\Downloads\'
+    condition: all of selection*
+falsepositives:
+    - Unsigned internal tools, game launchers, developer test servers
+level: low
